@@ -1,0 +1,120 @@
+#!/usr/bin/env ruby
+
+require 'umatic'
+
+module Umatic
+	class Application
+		SCREEN_BOUNDS = 80
+
+		def initialize(argv)
+			@argv = argv
+		end
+
+		def select total
+			return 1 if total == 1
+			while 1
+				print "Enter your choice [0 to cancel]: "
+				input = $stdin.gets.chomp
+				num = input.to_i
+				next unless num.to_s == input
+				return num if (0..total).member? num
+			end
+			0
+		end
+
+
+		def run
+			help if ARGV[0] == 'help'
+
+			@url = ARGV.last
+			fail "Please provide an URL to download from" unless @url
+
+			channel = Channel.open @url
+			fail "No matching channel found" unless channel
+
+			result = channel.process
+			fail "Unable to get videos" unless result
+
+			line '='
+			puts "      Title: #{result[:title]}"
+			puts "Description: #{result[:description]}"
+			line '='
+
+			sources = result[:sources]
+			max_fmt  = sources.map { |s| s.format.length }.max
+			max_inf = SCREEN_BOUNDS - 5 - max_fmt
+			sources.each_index do |i|
+				source = sources[i]
+				puts "#{(i+1).to_s.rjust(3)} #{source.info.ljust(max_inf)} #{source.format}"
+				line '-'
+			end
+
+			choice = select sources.count
+			abort if choice == 0
+			download(result, sources[choice-1])
+		end
+
+		def safe_file(filename)
+			filename.gsub(/(\\|\/|\'|\"|:|\(|\))/, "")
+		end
+
+		def download(result, source)
+			filename = Dir.pwd + '/' + safe_file(result[:title]) + '.' + source.format
+			url = source.url.dump
+
+			if command_exists? 'curl'
+				system "curl -o '#{filename}' #{url}"
+			elsif command_exists? 'wget'
+				system "wget -O '#{filename}' #{url}"
+			else
+				abort("No supported downloader found")
+			end
+		end
+
+		def command_exists?(cmd)
+			return true
+			exts = ENV['PATHEXT'] ? ENV['PATHEXT'].split(';') : ['']
+			ENV['PATH'].split(File::PATH_SEPARATOR).each do |path|
+				exts.each { |ext|
+					exe = File.join(path, "#{cmd}#{ext}")
+					return true if File.executable? exe
+				}
+			end
+			return false
+		end
+
+		def line char
+			SCREEN_BOUNDS.times do
+				print char
+			end
+			puts
+		end
+
+		def fail reason
+			puts reason
+			puts "Type 'help' for some info"
+			exit
+		end
+
+		def help
+			app = File.basename __FILE__
+
+			puts app
+			puts "CLI tool for video downloading"
+			puts
+
+			puts "Usage:"
+			puts "  #{app} url"
+			puts
+
+			puts "Supported Video Services:"
+			Umatic.supported_channels.each do |c|
+				puts "  #{c.to_s}"
+			end
+			exit
+		end
+	end
+
+end
+
+Umatic::Application.new(ARGV).run

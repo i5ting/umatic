@@ -1,7 +1,3 @@
-$:.push File.expand_path('../', __FILE__)
-require 'channel'
-require 'json'
-
 module Umatic
 	class SoundCloud < Channel
 		
@@ -36,8 +32,7 @@ module Umatic
 			rip = OpenStruct.new
 			rip.format = 'mp3'
 			rip.info   = '128 kbps rip'
-			rip.url    = JSON.parse(stream_json)['http_mp3_128_url']
-			
+			rip.url    = JSON.parse(stream_json)['http_mp3_128_url']	
 			sources << rip
 
 			result = OpenStruct.new

@@ -4,19 +4,16 @@ end
 
 $:.push File.expand_path('../', __FILE__)
 
-require 'std/proc'
-require 'channel/channel'
-require 'channel/youtube'
-require 'channel/vimeo'
-require 'channel/soundcloud'
+require 'channel'
 
 module Umatic
+
 	def self.open url
 		Channel.open url
 	end
 
 	def self.supported_channels
-		Channel.channels.map { |c| c.to_s.gsub(/Umatic::/, "") }
+		Channel.channels.map { |c| c.name }
 	end
 
 end

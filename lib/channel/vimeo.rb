@@ -1,17 +1,15 @@
-$:.push File.expand_path('../', __FILE__)
-require 'channel'
-
 module Umatic
 	class Vimeo < Channel
 		def self.supports? url
 			url.match(/https?:\/\/vimeo.com\/[\d+]{6,10}/)
 		end
 
-		def parse page
-			page.delete!("\n")
-			re = / = {config:(.+),assets:/
+		def process
+			page = download_webpage @url
+
+			re = / = {config:(.+),assets:/m
 				json_match = page.match(re)
-			raise "Unable to retrieve video info" unless json_match
+			return nil unless json_match
 			json = json_match[1]
 
 			config = JSON.parse(json)
@@ -28,7 +26,7 @@ module Umatic
 				qualities.each do |quality|
 					s = OpenStruct.new
 					s.format = 'mp4'
-					s.url = correct_url "http://player.vimeo.com/play_redirect?"\
+					s.url = resolve_url "http://player.vimeo.com/play_redirect?"\
 						"clip_id=#{video_id}"\
 					"&sig=#{sig}"\
 					"&time=#{timestamp}"\
@@ -41,15 +39,12 @@ module Umatic
 				end
 			end
 
-			{
-				:title 				=> title,
-				:description 	=> description,
-				:sources			=> sources
-			}
+			result = OpenStruct.new
+			result.title       = title
+			result.description = description
+			result.sources     = sources
+			result
 		end
 		
-		def correct_url(url)
-			HTTPClient.instance.open(url)
-		end
 	end
 end

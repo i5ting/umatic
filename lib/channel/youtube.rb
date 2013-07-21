@@ -1,8 +1,6 @@
-$:.push File.expand_path('../', __FILE__)
-require 'channel'
-
 module Umatic
 	class Youtube < Channel
+
 		def self.supports? url
 			url.match(/http[s]?:\/\/www.youtube.com\/watch?.*v=.+/) != nil
 		end
@@ -29,7 +27,9 @@ module Umatic
 			'46' => { :f => 'webm', :d => '1080p'  }
 		}
 
-		def parse page
+		def process
+			page = download_webpage @url
+
 			json_match = page.match(/<script>.+ytplayer.config = (.+).+?<\/script>/)
 			raise "Unable to retrieve video info" unless json_match
 			info = JSON::parse json_match[1]
@@ -52,11 +52,12 @@ module Umatic
 				sources << s
 			end
 
-			{
-				:title => title,
-				:description => description,
-				:sources => sources
-			}
+			result = OpenStruct.new
+			result.title       = title
+			result.description = description
+			result.sources     = sources
+			result
 		end
+
 	end
 end

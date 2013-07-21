@@ -22,6 +22,9 @@ module Umatic
 			0
 		end
 
+		def safe_file(filename)
+			filename.gsub(/(\\|\/|\'|\"|:|\(|\))/, "")
+		end
 
 		def run
 			help if ARGV[0] == 'help'
@@ -51,22 +54,18 @@ module Umatic
 
 			choice = select sources.count
 			abort if choice == 0
-			download(result, sources[choice-1])
-		end
 
-		def safe_file(filename)
-			filename.gsub(/(\\|\/|\'|\"|:|\(|\))/, "")
-		end
-
-		def download(result, source)
-			filename = Dir.pwd + '/' + safe_file(result.title) + '.' + source.format
-			puts source.url
+			source = sources[choice-1]
+			file = Dir.pwd + '/' + safe_file(result.title) + '.' + source.format
 			url = source.url.dump
+			download(url, file)
+		end
 
+		def download(from, to)
 			if command_exists? 'curl'
-				system "curl -o '#{filename}' #{url}"
+				system "curl -o '#{to}' #{from}"
 			elsif command_exists? 'wget'
-				system "wget -O '#{filename}' #{url}"
+				system "wget -O '#{to}' #{from}"
 			else
 				abort("No supported downloader found")
 			end

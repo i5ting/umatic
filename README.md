@@ -5,6 +5,7 @@ Supports following websites:
  
 * Youtube  
 * Vimeo
+* SoundCloud
 
 ## Installation
 

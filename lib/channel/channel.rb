@@ -36,6 +36,14 @@ module Umatic
 			page = HTTPClient.instance.get @url
 			parse page
 		end
+		
+		def download_webpage(url)
+			HTTPClient.instance.get url
+		end
+
+		def resolve_url(url)
+			HTTPClient.instance.open url
+		end
 
 	end
 end

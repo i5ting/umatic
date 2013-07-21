@@ -1,5 +1,6 @@
 #!/usr/bin/env ruby
 
+$:.push File.expand_path('../../lib/', __FILE__)
 require 'umatic'
 
 module Umatic
@@ -11,8 +12,7 @@ module Umatic
 		end
 
 		def select total
-			return 1 if total == 1
-			while 1
+			while true
 				print "Enter your choice [0 to cancel]: "
 				input = $stdin.gets.chomp
 				num = input.to_i
@@ -29,18 +29,18 @@ module Umatic
 			@url = ARGV.last
 			fail "Please provide an URL to download from" unless @url
 
-			channel = Channel.open @url
+			channel = Umatic.open @url
 			fail "No matching channel found" unless channel
 
 			result = channel.process
 			fail "Unable to get videos" unless result
 
 			line '='
-			puts "      Title: #{result[:title]}"
-			puts "Description: #{result[:description]}"
+			puts "      Title: #{result.title}"
+			puts "Description: #{result.description}"
 			line '='
 
-			sources = result[:sources]
+			sources = result.sources
 			max_fmt  = sources.map { |s| s.format.length }.max
 			max_inf = SCREEN_BOUNDS - 5 - max_fmt
 			sources.each_index do |i|
@@ -59,7 +59,8 @@ module Umatic
 		end
 
 		def download(result, source)
-			filename = Dir.pwd + '/' + safe_file(result[:title]) + '.' + source.format
+			filename = Dir.pwd + '/' + safe_file(result.title) + '.' + source.format
+			puts source.url
 			url = source.url.dump
 
 			if command_exists? 'curl'

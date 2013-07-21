@@ -8,6 +8,7 @@ require 'std/proc'
 require 'channel/channel'
 require 'channel/youtube'
 require 'channel/vimeo'
+require 'channel/soundcloud'
 
 module Umatic
 	def self.open url
@@ -17,5 +18,5 @@ module Umatic
 	def self.supported_channels
 		Channel.channels.map { |c| c.to_s.gsub(/Umatic::/, "") }
 	end
-	
+
 end
